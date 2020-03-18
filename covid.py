@@ -5,11 +5,11 @@ import re
 import sys
 import tempfile
 from datetime import datetime
-from glob import glob
+from pathlib import Path
 from subprocess import call
 
 
-DATAPATH = "./COVID-19/csse_covid_19_data/csse_covid_19_daily_reports"
+DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
 
 STATE_MATCHERS = {
     "Alberta":              re.compile(r".*, Alberta$"),
@@ -125,8 +125,8 @@ def massage_state(state_field):
 
 def read_data(state):
     data = {}
-    for filename in sorted(glob(f"{DATAPATH}/*.csv")):
-        with open(filename, "r", encoding="utf-8-sig") as csvfile:
+    for filename in sorted(DATAPATH.glob("*.csv")):
+        with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
             for row in csvreader:
                 state_field = massage_state(row["Province/State"])
@@ -143,8 +143,8 @@ def read_data(state):
 
 def list_states():
     states = set()
-    for filename in sorted(glob(f"{DATAPATH}/*.csv")):
-        with open(filename, "r", encoding="utf-8-sig") as csvfile:
+    for filename in sorted(DATAPATH.glob("*.csv")):
+        with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
             for row in csvreader:
                 state = massage_state(row["Province/State"])
