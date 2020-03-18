@@ -1,12 +1,20 @@
 #!/usr/bin/python3
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring
+import argparse
 import csv
+import pkg_resources
 import re
 import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
 from subprocess import run
+
+
+try:
+    __version__ = pkg_resources.get_distribution(__name__).version
+except (pkg_resources.DistributionNotFound, pkg_resources.RequirementParseError):
+    __version__ = None
 
 
 DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
@@ -153,23 +161,57 @@ def list_states():
     for state in sorted(states):
         print(state)
 
-if len(sys.argv) != 2:
-    print("USAGE: covid.py [-l] <STATE>")
-    print("  -l\t\tList states")
-    sys.exit(1)
-
-if sys.argv[1] == "-l":
-    list_states()
-    sys.exit(0)
-
 def main():
-    state = sys.argv[1].upper()
+    """ Main interface """
+    parser = _create_parser()
+    args = parser.parse_args()
+
+    if len(sys.argv) == 1:
+        parser.print_usage()
+        parser.exit(status=1)
+    elif args.list:
+        list_states()
+        sys.exit()
+
+    state = args.state.upper()
     data = read_data(state)
     with tempfile.NamedTemporaryFile(mode="w") as datfile:
         for key in sorted(data):
             datfile.write(f"{key}\t{data[key]}\n")
         datfile.flush()
         run(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"])
+
+
+
+
+def _create_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=f"%(prog)s CLI Help",
+        allow_abbrev=False,
+    )
+
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--list",
+        action="store_true",
+        help="List states",
+    )
+
+    parser.add_argument(
+        "state",
+        nargs="?",
+        help="State to graph",
+    )
+
+    return parser
+
 
 if __name__ == "__main__":
     main()
