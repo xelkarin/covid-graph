@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=40.5.0", "wheel", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 98
+target-version = ['py36','py37','py38']
+
+[tool.coverage]
+    [tool.coverage.run]
+    branch = true
+
+    [tool.coverage.report]
+    show_missing = true
+
+[tool.isort]
+atomic = true
+lines_after_imports = 2
+lines_between_types = 0
+multi_line_output = 3
+not_skip = '__init__.py'
+default_section = 'THIRDPARTY'
+
+[tools.setuptools_scm]
+use_scm_version = true
