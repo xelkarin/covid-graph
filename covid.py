@@ -21,51 +21,53 @@ except (pkg_resources.DistributionNotFound, pkg_resources.RequirementParseError)
 DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
 
 STATE_MATCHERS = {
-    "Alberta":              re.compile(r".*, Alberta$"),
-    "Arizona":              re.compile(r".*, AZ$"),
-    "California":           re.compile(r"(.*, CA$|.*, CA \(From Diamond Princess\))"),
-    "Colorado":             re.compile(r".*, CO$"),
-    "Connecticut":          re.compile(r".*, CT$"),
+    "Alberta": re.compile(r".*, Alberta$"),
+    "Arizona": re.compile(r".*, AZ$"),
+    "California": re.compile(r"(.*, CA$|.*, CA \(From Diamond Princess\))"),
+    "Colorado": re.compile(r".*, CO$"),
+    "Connecticut": re.compile(r".*, CT$"),
     "District of Columbia": re.compile(r"Washington, D.C.$"),
-    "Florida":              re.compile(r".*, FL$"),
-    "Georgia":              re.compile(r".*, GA$"),
-    "Hawaii":               re.compile(r".*, HI$"),
-    "Illinois":             re.compile(r".*, IL$"),
-    "Indiana":              re.compile(r".*, IN$"),
-    "Iowa":                 re.compile(r".*, IA$"),
-    "Kansas":               re.compile(r".*, KS$"),
-    "Kentucky":             re.compile(r".*, KY$"),
-    "Louisiana":            re.compile(r".*, LA$"),
-    "Maryland":             re.compile(r".*, MD$"),
-    "Massachusetts":        re.compile(r".*, MA$"),
-    "Minnesota":            re.compile(r".*, MN$"),
-    "Missouri":             re.compile(r".*, MO$"),
-    "Nebraska":             re.compile(r"(.*, NE$|.*, NE \(From Diamond Princess\))"),
-    "Nevada":               re.compile(r".*, NV$"),
-    "New Hampshire":        re.compile(r".*, NH$"),
-    "New Jersey":           re.compile(r".*, NJ$"),
-    "New York":             re.compile(r".*, NY$"),
-    "North Carolina":       re.compile(r".*, NC$"),
-    "Oklahoma":             re.compile(r".*, OK$"),
-    "Ontario":              re.compile(r".*, ON$"),
-    "Oregon":               re.compile(r".*, OR$"),
-    "Pennsylvania":         re.compile(r".*, PA$"),
-    "Quebec":               re.compile(r".*, QC$"),
-    "Rhode Island":         re.compile(r".*, RI$"),
-    "South Carolina":       re.compile(r".*, SC$"),
-    "Tennessee":            re.compile(r".*, TN$"),
-    "Texas":                re.compile(r"(.*, TX$|.*, TX \(From Diamond Princess\))"),
-    "Utah":                 re.compile(r".*, UT$"),
-    "Vermont":              re.compile(r".*, VT$"),
-    "Virginia":             re.compile(r".*, VA$"),
-    "Washington":           re.compile(r".*, WA$"),
-    "Wisconsin":            re.compile(r".*, WI$"),
+    "Florida": re.compile(r".*, FL$"),
+    "Georgia": re.compile(r".*, GA$"),
+    "Hawaii": re.compile(r".*, HI$"),
+    "Illinois": re.compile(r".*, IL$"),
+    "Indiana": re.compile(r".*, IN$"),
+    "Iowa": re.compile(r".*, IA$"),
+    "Kansas": re.compile(r".*, KS$"),
+    "Kentucky": re.compile(r".*, KY$"),
+    "Louisiana": re.compile(r".*, LA$"),
+    "Maryland": re.compile(r".*, MD$"),
+    "Massachusetts": re.compile(r".*, MA$"),
+    "Minnesota": re.compile(r".*, MN$"),
+    "Missouri": re.compile(r".*, MO$"),
+    "Nebraska": re.compile(r"(.*, NE$|.*, NE \(From Diamond Princess\))"),
+    "Nevada": re.compile(r".*, NV$"),
+    "New Hampshire": re.compile(r".*, NH$"),
+    "New Jersey": re.compile(r".*, NJ$"),
+    "New York": re.compile(r".*, NY$"),
+    "North Carolina": re.compile(r".*, NC$"),
+    "Oklahoma": re.compile(r".*, OK$"),
+    "Ontario": re.compile(r".*, ON$"),
+    "Oregon": re.compile(r".*, OR$"),
+    "Pennsylvania": re.compile(r".*, PA$"),
+    "Quebec": re.compile(r".*, QC$"),
+    "Rhode Island": re.compile(r".*, RI$"),
+    "South Carolina": re.compile(r".*, SC$"),
+    "Tennessee": re.compile(r".*, TN$"),
+    "Texas": re.compile(r"(.*, TX$|.*, TX \(From Diamond Princess\))"),
+    "Utah": re.compile(r".*, UT$"),
+    "Vermont": re.compile(r".*, VT$"),
+    "Virginia": re.compile(r".*, VA$"),
+    "Washington": re.compile(r".*, WA$"),
+    "Wisconsin": re.compile(r".*, WI$"),
 }
+
 
 class Stats:
     def __init__(self, data=None):
         def toint(data_):
             return int(data_) if data_ else 0
+
         if not data:
             self._date = None
             self._confirmed = 0
@@ -115,11 +117,13 @@ class Stats:
         self._recovered += other._recovered
         return self
 
+
 def match_cruise_ship(state_field):
     matcher = re.compile("(.*princess.*|.*cruise ship.*)", re.IGNORECASE)
     if matcher.match(state_field):
         return True
     return False
+
 
 def massage_state(state_field):
     state_field = state_field.strip()
@@ -131,6 +135,7 @@ def massage_state(state_field):
         return ""
 
     return state_field
+
 
 def read_data(state):
     data = {}
@@ -150,14 +155,18 @@ def read_data(state):
         data[key] = data[key].infected
     return data
 
+
 def list_states():
     states = list()
     for filename in DATAPATH.glob("*.csv"):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
-            states = sorted(set(filter(None, (massage_state(row["Province/State"]) for row in csvreader))))
+            states = sorted(
+                set(filter(None, (massage_state(row["Province/State"]) for row in csvreader)))
+            )
 
     return states
+
 
 def main():
     """ Main interface """
@@ -179,31 +188,20 @@ def main():
         datfile.flush()
         run(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"], check=True)
 
+
 def _create_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=f"%(prog)s CLI Help",
-        allow_abbrev=False,
+    parser = argparse.ArgumentParser(description=f"%(prog)s CLI Help", allow_abbrev=False,)
+
+    parser.add_argument(
+        "-v", "--version", action="version", version=f"%(prog)s {__version__}",
     )
 
     parser.add_argument(
-        "-v",
-        "--version",
-        action="version",
-        version=f"%(prog)s {__version__}",
+        "-l", "--list", action="store_true", help="List states",
     )
 
     parser.add_argument(
-        "-l",
-        "--list",
-        action="store_true",
-        help="List states",
-    )
-
-    parser.add_argument(
-        "state",
-        nargs="?",
-        choices=list_states(),
-        help="State to graph",
+        "state", nargs="?", choices=list_states(), help="State to graph",
     )
 
     return parser
