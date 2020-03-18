@@ -97,10 +97,10 @@ class Stats:
 
     def _parse_data(self, data):
         date = self._massage_date(data["Last Update"])
-        confirmed = 0 if data["Confirmed"] == "" else int(data["Confirmed"])
-        deaths = 0 if data["Deaths"] == "" else int(data["Deaths"])
-        recovered = 0 if data["Recovered"] == "" else int(data["Recovered"])
-        return (date, confirmed, deaths, recovered)
+        confirmed = int(data.get("Confirmed", 0))
+        deaths = int(data.get("Deaths", 0))
+        recovered = int(data.get("Recovered", 0))
+        return date, confirmed, deaths, recovered
 
     def __iadd__(self, other):
         other = Stats(other)
