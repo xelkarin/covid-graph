@@ -51,7 +51,7 @@ STATE_MATCHERS = {
 
 class Stats:
     def __init__(self, data=None):
-        if data == None:
+        if not data:
             self._date = None
             self._confirmed = 0
             self._deaths = 0
@@ -97,7 +97,7 @@ class Stats:
 
     def __iadd__(self, other):
         other = Stats(other)
-        if self._date == None:
+        if self._date is None:
             self._date = other._date
         elif self._date != other._date:
             raise RuntimeError(f"Dates do not match.")
