@@ -6,7 +6,7 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from subprocess import call
+from subprocess import run
 
 
 DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
@@ -169,7 +169,7 @@ def main():
         for key in sorted(data):
             datfile.write(f"{key}\t{data[key]}\n")
         datfile.flush()
-        call(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"])
+        run(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"])
 
 if __name__ == "__main__":
     main()
