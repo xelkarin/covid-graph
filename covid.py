@@ -5,17 +5,18 @@ import csv
 import re
 import sys
 import tempfile
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from subprocess import run
 
-import pkg_resources
+from pkg_resources import DistributionNotFound, RequirementParseError, get_distribution
 
 
-try:
-    __version__ = pkg_resources.get_distribution(__name__).version
-except (pkg_resources.DistributionNotFound, pkg_resources.RequirementParseError):
-    __version__ = None
+__version__ = "0.0.0"
+
+with suppress(DistributionNotFound, RequirementParseError):
+    __version__ = get_distribution(__name__).version
 
 
 DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
