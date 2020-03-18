@@ -55,17 +55,18 @@ STATE_MATCHERS = {
 
 class Stats:
     def __init__(self, data=None):
+        def toint(data_):
+            return int(data_) if data_ else 0
         if not data:
             self._date = None
             self._confirmed = 0
             self._deaths = 0
             self._recovered = 0
         elif isinstance(data, dict):
-            data = self._parse_data(data)
-            self._date = data[0]
-            self._confirmed = data[1]
-            self._deaths = data[2]
-            self._recovered = data[3]
+            self._date = self._massage_date(data["Last Update"])
+            self._confirmed = toint(data.get("Confirmed"))
+            self._deaths = toint(data.get("Deaths"))
+            self._recovered = toint(data.get("Recovered"))
         elif isinstance(data, Stats):
             self._date = data._date
             self._confirmed = data._confirmed
@@ -94,13 +95,6 @@ class Stats:
         else:
             date = datetime.strptime(date_field, "%Y-%m-%dT%H:%M:%S")
         return date.strftime("%m/%d/%Y")
-
-    def _parse_data(self, data):
-        date = self._massage_date(data["Last Update"])
-        confirmed = int(data.get("Confirmed", 0))
-        deaths = int(data.get("Deaths", 0))
-        recovered = int(data.get("Recovered", 0))
-        return date, confirmed, deaths, recovered
 
     def __iadd__(self, other):
         other = Stats(other)
