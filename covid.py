@@ -2,13 +2,14 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring
 import argparse
 import csv
-import pkg_resources
 import re
 import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
 from subprocess import run
+
+import pkg_resources
 
 
 try:
