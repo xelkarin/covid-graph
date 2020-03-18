@@ -161,11 +161,11 @@ def list_states():
 if len(sys.argv) != 2:
     print("USAGE: covid.py [-l] <STATE>")
     print("  -l\t\tList states")
-    exit(1)
+    sys.exit(1)
 
 if sys.argv[1] == "-l":
     list_states()
-    exit(0)
+    sys.exit(0)
 
 state = sys.argv[1].upper()
 data = read_data(state)
