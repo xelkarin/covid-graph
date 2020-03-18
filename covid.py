@@ -166,10 +166,14 @@ if sys.argv[1] == "-l":
     list_states()
     sys.exit(0)
 
-state = sys.argv[1].upper()
-data = read_data(state)
-with tempfile.NamedTemporaryFile(mode="w") as datfile:
-    for key in sorted(data):
-        datfile.write(f"{key}\t{data[key]}\n")
-    datfile.flush()
-    call(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"])
+def main():
+    state = sys.argv[1].upper()
+    data = read_data(state)
+    with tempfile.NamedTemporaryFile(mode="w") as datfile:
+        for key in sorted(data):
+            datfile.write(f"{key}\t{data[key]}\n")
+        datfile.flush()
+        call(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"])
+
+if __name__ == "__main__":
+    main()
