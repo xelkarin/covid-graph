@@ -74,13 +74,16 @@ class Stats:
         else:
             raise TypeError(f"Can't convert {data.__class__} to Stats")
 
+    @property
     def date(self):
         return self._date
 
+    @property
     def infected(self):
         return self._confirmed - self._deaths - self._recovered
 
-    def _massage_date(self, date_field):
+    @staticmethod
+    def _massage_date(date_field):
         if "/" in date_field:
             date, _ = date_field.split(" ")
             month, day, year = date.split("/")
@@ -136,13 +139,13 @@ def read_data(state):
                 state_field = massage_state(row["Province/State"])
                 if state_field and state == state_field.upper():
                     stats = Stats(row)
-                    date = stats.date()
+                    date = stats.date
                     if data.get(date):
                         data[date] += stats
                     else:
                         data[date] = stats
     for key in data:
-        data[key] = data[key].infected()
+        data[key] = data[key].infected
     return data
 
 def list_states():
