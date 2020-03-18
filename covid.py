@@ -123,10 +123,9 @@ def massage_state(state_field):
             return state
 
     if match_cruise_ship(state_field):
-        return None
+        return ""
 
-    if state_field != "":
-        return state_field
+    return state_field
 
 def read_data(state):
     data = {}
