@@ -177,7 +177,7 @@ def main():
         for key in sorted(data):
             datfile.write(f"{key}\t{data[key]}\n")
         datfile.flush()
-        run(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"])
+        run(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"], check=True)
 
 def _create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
