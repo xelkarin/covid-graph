@@ -81,11 +81,11 @@ class Stats:
 
     def _massage_date(self, date_field):
         if "/" in date_field:
-            day, time = date_field.split(" ")
-            m, d, y = day.split("/")
-            y = int(y)
-            if y < 100: y += 2000
-            date_str = "%02d/%02d/%04d" % (int(m), int(d), int(y))
+            date, _ = date_field.split(" ")
+            month, day, year = date.split("/")
+            year = int(year)
+            if year < 100: year += 2000
+            date_str = "%02d/%02d/%04d" % (int(month), int(day), int(year))
             date = datetime.strptime(date_str, "%m/%d/%Y")
         else:
             date = datetime.strptime(date_field, "%Y-%m-%dT%H:%M:%S")
@@ -93,10 +93,10 @@ class Stats:
 
     def _parse_data(self, data):
         date = self._massage_date(data["Last Update"])
-        c = 0 if data["Confirmed"] == "" else int(data["Confirmed"])
-        d = 0 if data["Deaths"] == "" else int(data["Deaths"])
-        r = 0 if data["Recovered"] == "" else int(data["Recovered"])
-        return (date, c, d, r)
+        confirmed = 0 if data["Confirmed"] == "" else int(data["Confirmed"])
+        deaths = 0 if data["Deaths"] == "" else int(data["Deaths"])
+        recovered = 0 if data["Recovered"] == "" else int(data["Recovered"])
+        return (date, confirmed, deaths, recovered)
 
     def __iadd__(self, other):
         other = Stats(other)
