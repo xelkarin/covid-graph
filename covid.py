@@ -63,7 +63,7 @@ class Stats:
             self._deaths = 0
             self._recovered = 0
         elif isinstance(data, dict):
-            self._date = self._massage_date(data["Last Update"])
+            self._date = self._datestr(data["Last Update"])
             self._confirmed = toint(data.get("Confirmed"))
             self._deaths = toint(data.get("Deaths"))
             self._recovered = toint(data.get("Recovered"))
@@ -84,14 +84,13 @@ class Stats:
         return self._confirmed - self._deaths - self._recovered
 
     @staticmethod
-    def _massage_date(date_field):
+    def _datestr(date_field):
         if "/" in date_field:
-            date, _ = date_field.split(" ")
-            month, day, year = date.split("/")
-            year = int(year)
-            if year < 100: year += 2000
-            date_str = "%02d/%02d/%04d" % (int(month), int(day), int(year))
-            date = datetime.strptime(date_str, "%m/%d/%Y")
+            rawdate = date_field.split(" ")[0]
+            month, day, year = tuple(int(x) for x in rawdate.split("/"))
+            if year < 100:
+                year += 2000
+            date = datetime.strptime(f"{month:02d}/{day:02d}/{year:04d}", "%m/%d/%Y")
         else:
             date = datetime.strptime(date_field, "%Y-%m-%dT%H:%M:%S")
         return date.strftime("%m/%d/%Y")
