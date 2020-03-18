@@ -3,7 +3,6 @@ import csv
 import re
 import sys
 import tempfile
-from collections import OrderedDict
 from datetime import datetime
 from glob import glob
 from subprocess import call
@@ -60,13 +59,13 @@ class Stats:
             self._confirmed = 0
             self._deaths = 0
             self._recovered = 0
-        elif type(data) == OrderedDict:
+        elif isinstance(data, dict):
             data = self._parse_data(data)
             self._date = data[0]
             self._confirmed = data[1]
             self._deaths = data[2]
             self._recovered = data[3]
-        elif type(data) == Stats:
+        elif isinstance(data, Stats):
             self._date = data._date
             self._confirmed = data._confirmed
             self._deaths = data._deaths
