@@ -1,9 +1,13 @@
 #!/usr/bin/python
+import csv
+import re
+import sys
+import tempfile
 from collections import OrderedDict
 from datetime import datetime
 from glob import glob
 from subprocess import call
-import csv, re, sys, tempfile
+
 
 DATAPATH = "./COVID-19/csse_covid_19_data/csse_covid_19_daily_reports"
 
