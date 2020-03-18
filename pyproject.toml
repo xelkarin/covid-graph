@@ -15,9 +15,10 @@ target-version = ['py36','py37','py38']
 
 [tool.isort]
 atomic = true
+include_trailing_comma = true
+line_length = 98
 lines_after_imports = 2
 lines_between_types = 0
 multi_line_output = 3
 not_skip = '__init__.py'
 default_section = 'THIRDPARTY'
-
