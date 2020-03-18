@@ -121,9 +121,9 @@ def match_cruise_ship(state_field):
     return False
 
 def massage_state(state_field):
-    state_field = state_field.lstrip().rstrip()
-    for state in STATE_MATCHERS:
-        if STATE_MATCHERS[state].match(state_field):
+    state_field = state_field.strip()
+    for state, matcher in STATE_MATCHERS.items():
+        if matcher.match(state_field):
             return state
 
     if match_cruise_ship(state_field):
@@ -150,16 +150,13 @@ def read_data(state):
     return data
 
 def list_states():
-    states = set()
-    for filename in sorted(DATAPATH.glob("*.csv")):
+    states = list()
+    for filename in DATAPATH.glob("*.csv"):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
-            for row in csvreader:
-                state = massage_state(row["Province/State"])
-                if state: states.add(state)
+            states = sorted(set(filter(None, (massage_state(row["Province/State"]) for row in csvreader))))
 
-    for state in sorted(states):
-        print(state)
+    return states
 
 def main():
     """ Main interface """
@@ -170,7 +167,7 @@ def main():
         parser.print_usage()
         parser.exit(status=1)
     elif args.list:
-        list_states()
+        print("\n".join(list_states()))
         sys.exit()
 
     state = args.state.upper()
@@ -180,9 +177,6 @@ def main():
             datfile.write(f"{key}\t{data[key]}\n")
         datfile.flush()
         run(["gnuplot", "-p", "-e", f"datfile='{datfile.name}'", "./covid.gp"])
-
-
-
 
 def _create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -207,6 +201,7 @@ def _create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "state",
         nargs="?",
+        choices=list_states(),
         help="State to graph",
     )
 
