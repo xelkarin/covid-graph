@@ -26,45 +26,45 @@ with suppress(DistributionNotFound, RequirementParseError):
 DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
 
 STATE_MATCHERS = {
-    "Alberta": re.compile(r".*, Alberta$"),
-    "Arizona": re.compile(r".*, AZ$"),
-    "California": re.compile(r"(.*, CA$|.*, CA \(From Diamond Princess\))"),
-    "Colorado": re.compile(r".*, CO$"),
-    "Connecticut": re.compile(r".*, CT$"),
-    "District of Columbia": re.compile(r"Washington, D.C.$"),
-    "Florida": re.compile(r".*, FL$"),
-    "Georgia": re.compile(r".*, GA$"),
-    "Hawaii": re.compile(r".*, HI$"),
-    "Illinois": re.compile(r".*, IL$"),
-    "Indiana": re.compile(r".*, IN$"),
-    "Iowa": re.compile(r".*, IA$"),
-    "Kansas": re.compile(r".*, KS$"),
-    "Kentucky": re.compile(r".*, KY$"),
-    "Louisiana": re.compile(r".*, LA$"),
-    "Maryland": re.compile(r".*, MD$"),
-    "Massachusetts": re.compile(r".*, MA$"),
-    "Minnesota": re.compile(r".*, MN$"),
-    "Missouri": re.compile(r".*, MO$"),
-    "Nebraska": re.compile(r"(.*, NE$|.*, NE \(From Diamond Princess\))"),
-    "Nevada": re.compile(r".*, NV$"),
-    "New Hampshire": re.compile(r".*, NH$"),
-    "New Jersey": re.compile(r".*, NJ$"),
-    "New York": re.compile(r".*, NY$"),
-    "North Carolina": re.compile(r".*, NC$"),
-    "Oklahoma": re.compile(r".*, OK$"),
-    "Ontario": re.compile(r".*, ON$"),
-    "Oregon": re.compile(r".*, OR$"),
-    "Pennsylvania": re.compile(r".*, PA$"),
-    "Quebec": re.compile(r".*, QC$"),
-    "Rhode Island": re.compile(r".*, RI$"),
-    "South Carolina": re.compile(r".*, SC$"),
-    "Tennessee": re.compile(r".*, TN$"),
-    "Texas": re.compile(r"(.*, TX$|.*, TX \(From Diamond Princess\))"),
-    "Utah": re.compile(r".*, UT$"),
-    "Vermont": re.compile(r".*, VT$"),
-    "Virginia": re.compile(r".*, VA$"),
-    "Washington": re.compile(r".*, WA$"),
-    "Wisconsin": re.compile(r".*, WI$"),
+    "Alberta": r".*, Alberta$",
+    "Arizona": r".*, AZ$",
+    "California": r"(.*, CA$|.*, CA \(From Diamond Princess\))",
+    "Colorado": r".*, CO$",
+    "Connecticut": r".*, CT$",
+    "District of Columbia": r"Washington, D.C.$",
+    "Florida": r".*, FL$",
+    "Georgia": r".*, GA$",
+    "Hawaii": r".*, HI$",
+    "Illinois": r".*, IL$",
+    "Indiana": r".*, IN$",
+    "Iowa": r".*, IA$",
+    "Kansas": r".*, KS$",
+    "Kentucky": r".*, KY$",
+    "Louisiana": r".*, LA$",
+    "Maryland": r".*, MD$",
+    "Massachusetts": r".*, MA$",
+    "Minnesota": r".*, MN$",
+    "Missouri": r".*, MO$",
+    "Nebraska": r"(.*, NE$|.*, NE \(From Diamond Princess\))",
+    "Nevada": r".*, NV$",
+    "New Hampshire": r".*, NH$",
+    "New Jersey": r".*, NJ$",
+    "New York": r".*, NY$",
+    "North Carolina": r".*, NC$",
+    "Oklahoma": r".*, OK$",
+    "Ontario": r".*, ON$",
+    "Oregon": r".*, OR$",
+    "Pennsylvania": r".*, PA$",
+    "Quebec": r".*, QC$",
+    "Rhode Island": r".*, RI$",
+    "South Carolina": r".*, SC$",
+    "Tennessee": r".*, TN$",
+    "Texas": r"(.*, TX$|.*, TX \(From Diamond Princess\))",
+    "Utah": r".*, UT$",
+    "Vermont": r".*, VT$",
+    "Virginia": r".*, VA$",
+    "Washington": r".*, WA$",
+    "Wisconsin": r".*, WI$",
 }
 
 
@@ -129,13 +129,18 @@ def is_cruise_ship(state_field) -> bool:
 
 def clean_state_name(state_field: str) -> str:
     state_field = state_field.strip()
-    for state, matcher in STATE_MATCHERS.items():
-        if matcher.match(state_field):
+
+    if not state_field or is_cruise_ship(state_field):
+        return ""
+    elif state_field in STATE_MATCHERS:
+        return state_field
+
+    for state, re_str in STATE_MATCHERS.items():
+        if re.search(re_str, state_field):
             return state
 
-    if is_cruise_ship(state_field):
-        return ""
     return state_field
+
 
 def get_infected_state_data(state: str) -> Dict[str, int]:
     data = defaultdict(Stats)
