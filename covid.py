@@ -10,6 +10,7 @@ from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from subprocess import run
+from typing import Sequence
 
 from pkg_resources import DistributionNotFound, RequirementParseError, get_distribution
 
@@ -159,7 +160,7 @@ def read_data(state):
     return data
 
 
-def list_states():
+def get_states() -> Sequence[str]:
     states = list()
     for filename in DATAPATH.glob("*.csv"):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
@@ -180,7 +181,7 @@ def main():
         parser.print_usage()
         parser.exit(status=1)
     elif args.list:
-        print("\n".join(list_states()))
+        print("\n".join(get_states()))
         sys.exit()
 
     state = args.state.upper()
@@ -204,7 +205,7 @@ def _create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "state", nargs="?", choices=list_states(), help="State to graph",
+        "state", nargs="?", choices=get_states(), help="State to graph",
     )
 
     return parser
