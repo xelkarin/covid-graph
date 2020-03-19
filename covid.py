@@ -2,6 +2,7 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring
 import argparse
 import csv
+import logging
 import re
 import sys
 import tempfile
@@ -13,6 +14,7 @@ from subprocess import run
 from pkg_resources import DistributionNotFound, RequirementParseError, get_distribution
 
 
+_LOGGER = logging.getLogger(__name__)
 __version__ = "0.0.0"
 
 with suppress(DistributionNotFound, RequirementParseError):
