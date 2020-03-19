@@ -181,8 +181,7 @@ def main():
         print("\n".join(get_states()))
         sys.exit()
 
-    state = args.state.upper()
-    data = get_infected_state_data(state)
+    data = get_infected_state_data(args.state)
     with tempfile.NamedTemporaryFile(mode="w") as datfile:
         for key in sorted(data):
             datfile.write(f"{key}\t{data[key]}\n")
