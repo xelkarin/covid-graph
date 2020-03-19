@@ -65,16 +65,16 @@ STATE_MATCHERS = {
 
 
 class Stats:
+    _date: str = ""
+    _confirmed: int = 0
+    _deaths: int = 0
+    _recovered: int = 0
+
     def __init__(self, data=None):
         def toint(data_):
             return int(data_) if data_ else 0
 
-        if not data:
-            self._date = None
-            self._confirmed = 0
-            self._deaths = 0
-            self._recovered = 0
-        elif isinstance(data, dict):
+        if isinstance(data, dict):
             self._date = self._datestr(data["Last Update"])
             self._confirmed = toint(data.get("Confirmed"))
             self._deaths = toint(data.get("Deaths"))
@@ -84,7 +84,7 @@ class Stats:
             self._confirmed = data._confirmed
             self._deaths = data._deaths
             self._recovered = data._recovered
-        else:
+        elif data:
             raise TypeError(f"Can't convert {data.__class__} to Stats")
 
     @property
@@ -92,7 +92,7 @@ class Stats:
         return self._date
 
     @property
-    def infected(self):
+    def infected(self) -> int:
         return self._confirmed - self._deaths - self._recovered
 
     @staticmethod
@@ -109,7 +109,7 @@ class Stats:
 
     def __iadd__(self, other):
         other = Stats(other)
-        if self._date is None:
+        if not self._date:
             self._date = other._date
         elif self._date != other._date:
             raise RuntimeError(f"Dates do not match.")
