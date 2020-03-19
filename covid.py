@@ -6,11 +6,12 @@ import logging
 import re
 import sys
 import tempfile
+from collections import defaultdict
 from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from subprocess import run
-from typing import Sequence
+from typing import Dict, Sequence
 
 from pkg_resources import DistributionNotFound, RequirementParseError, get_distribution
 
@@ -122,42 +123,33 @@ class Stats:
         return self
 
 
-def match_cruise_ship(state_field):
-    matcher = re.compile("(.*princess.*|.*cruise ship.*)", re.IGNORECASE)
-    if matcher.match(state_field):
-        return True
-    return False
+def is_cruise_ship(state_field) -> bool:
+    return not re.search("(princess|cruise ship)", state_field, re.IGNORECASE) is None
 
 
-def massage_state(state_field):
+def clean_state_name(state_field: str) -> str:
     state_field = state_field.strip()
     for state, matcher in STATE_MATCHERS.items():
         if matcher.match(state_field):
             return state
 
-    if match_cruise_ship(state_field):
+    if is_cruise_ship(state_field):
         return ""
-
     return state_field
 
+def get_infected_state_data(state: str) -> Dict[str, int]:
+    data = defaultdict(Stats)
+    if not state:
+        _LOGGER.warning("State cannot be an empty string.")
 
-def read_data(state):
-    data = {}
     for filename in sorted(DATAPATH.glob("*.csv")):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
             for row in csvreader:
-                state_field = massage_state(row["Province/State"])
-                if state_field and state == state_field.upper():
+                if state.casefold() == clean_state_name(row["Province/State"]).casefold():
                     stats = Stats(row)
-                    date = stats.date
-                    if data.get(date):
-                        data[date] += stats
-                    else:
-                        data[date] = stats
-    for key in data:
-        data[key] = data[key].infected
-    return data
+                    data[stats.date] += stats
+    return {date_: stats_.infected for date_, stats_ in data.items()}
 
 
 def get_states() -> Sequence[str]:
@@ -166,7 +158,7 @@ def get_states() -> Sequence[str]:
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
             states = sorted(
-                set(filter(None, (massage_state(row["Province/State"]) for row in csvreader)))
+                set(filter(None, (clean_state_name(row["Province/State"]) for row in csvreader)))
             )
 
     return states
@@ -185,7 +177,7 @@ def main():
         sys.exit()
 
     state = args.state.upper()
-    data = read_data(state)
+    data = get_infected_state_data(state)
     with tempfile.NamedTemporaryFile(mode="w") as datfile:
         for key in sorted(data):
             datfile.write(f"{key}\t{data[key]}\n")
