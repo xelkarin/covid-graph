@@ -2,78 +2,83 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring
 import argparse
 import csv
+import logging
 import re
 import sys
 import tempfile
+from collections import defaultdict
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from subprocess import run
+from typing import Dict, Sequence
 
-import pkg_resources
+from pkg_resources import DistributionNotFound, RequirementParseError, get_distribution
 
 
-try:
-    __version__ = pkg_resources.get_distribution(__name__).version
-except (pkg_resources.DistributionNotFound, pkg_resources.RequirementParseError):
-    __version__ = None
+_LOGGER = logging.getLogger(__name__)
+__version__ = "0.0.0"
+
+with suppress(DistributionNotFound, RequirementParseError):
+    __version__ = get_distribution(__name__).version
 
 
 DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
 
 STATE_MATCHERS = {
-    "Alberta": re.compile(r".*, Alberta$"),
-    "Arizona": re.compile(r".*, AZ$"),
-    "California": re.compile(r"(.*, CA$|.*, CA \(From Diamond Princess\))"),
-    "Colorado": re.compile(r".*, CO$"),
-    "Connecticut": re.compile(r".*, CT$"),
-    "District of Columbia": re.compile(r"Washington, D.C.$"),
-    "Florida": re.compile(r".*, FL$"),
-    "Georgia": re.compile(r".*, GA$"),
-    "Hawaii": re.compile(r".*, HI$"),
-    "Illinois": re.compile(r".*, IL$"),
-    "Indiana": re.compile(r".*, IN$"),
-    "Iowa": re.compile(r".*, IA$"),
-    "Kansas": re.compile(r".*, KS$"),
-    "Kentucky": re.compile(r".*, KY$"),
-    "Louisiana": re.compile(r".*, LA$"),
-    "Maryland": re.compile(r".*, MD$"),
-    "Massachusetts": re.compile(r".*, MA$"),
-    "Minnesota": re.compile(r".*, MN$"),
-    "Missouri": re.compile(r".*, MO$"),
-    "Nebraska": re.compile(r"(.*, NE$|.*, NE \(From Diamond Princess\))"),
-    "Nevada": re.compile(r".*, NV$"),
-    "New Hampshire": re.compile(r".*, NH$"),
-    "New Jersey": re.compile(r".*, NJ$"),
-    "New York": re.compile(r".*, NY$"),
-    "North Carolina": re.compile(r".*, NC$"),
-    "Oklahoma": re.compile(r".*, OK$"),
-    "Ontario": re.compile(r".*, ON$"),
-    "Oregon": re.compile(r".*, OR$"),
-    "Pennsylvania": re.compile(r".*, PA$"),
-    "Quebec": re.compile(r".*, QC$"),
-    "Rhode Island": re.compile(r".*, RI$"),
-    "South Carolina": re.compile(r".*, SC$"),
-    "Tennessee": re.compile(r".*, TN$"),
-    "Texas": re.compile(r"(.*, TX$|.*, TX \(From Diamond Princess\))"),
-    "Utah": re.compile(r".*, UT$"),
-    "Vermont": re.compile(r".*, VT$"),
-    "Virginia": re.compile(r".*, VA$"),
-    "Washington": re.compile(r".*, WA$"),
-    "Wisconsin": re.compile(r".*, WI$"),
+    "Alberta": r".*, Alberta$",
+    "Arizona": r".*, AZ$",
+    "California": r"(.*, CA$|.*, CA \(From Diamond Princess\))",
+    "Colorado": r".*, CO$",
+    "Connecticut": r".*, CT$",
+    "District of Columbia": r"Washington, D.C.$",
+    "Florida": r".*, FL$",
+    "Georgia": r".*, GA$",
+    "Hawaii": r".*, HI$",
+    "Illinois": r".*, IL$",
+    "Indiana": r".*, IN$",
+    "Iowa": r".*, IA$",
+    "Kansas": r".*, KS$",
+    "Kentucky": r".*, KY$",
+    "Louisiana": r".*, LA$",
+    "Maryland": r".*, MD$",
+    "Massachusetts": r".*, MA$",
+    "Minnesota": r".*, MN$",
+    "Missouri": r".*, MO$",
+    "Nebraska": r"(.*, NE$|.*, NE \(From Diamond Princess\))",
+    "Nevada": r".*, NV$",
+    "New Hampshire": r".*, NH$",
+    "New Jersey": r".*, NJ$",
+    "New York": r".*, NY$",
+    "North Carolina": r".*, NC$",
+    "Oklahoma": r".*, OK$",
+    "Ontario": r".*, ON$",
+    "Oregon": r".*, OR$",
+    "Pennsylvania": r".*, PA$",
+    "Quebec": r".*, QC$",
+    "Rhode Island": r".*, RI$",
+    "South Carolina": r".*, SC$",
+    "Tennessee": r".*, TN$",
+    "Texas": r"(.*, TX$|.*, TX \(From Diamond Princess\))",
+    "Utah": r".*, UT$",
+    "Vermont": r".*, VT$",
+    "Virginia": r".*, VA$",
+    "Washington": r".*, WA$",
+    "Wisconsin": r".*, WI$",
 }
 
 
 class Stats:
+    _date: str = ""
+    _confirmed: int = 0
+    _deaths: int = 0
+    _recovered: int = 0
+
     def __init__(self, data=None):
         def toint(data_):
             return int(data_) if data_ else 0
 
-        if not data:
-            self._date = None
-            self._confirmed = 0
-            self._deaths = 0
-            self._recovered = 0
-        elif isinstance(data, dict):
+        if isinstance(data, dict):
             self._date = self._datestr(data["Last Update"])
             self._confirmed = toint(data.get("Confirmed"))
             self._deaths = toint(data.get("Deaths"))
@@ -83,7 +88,7 @@ class Stats:
             self._confirmed = data._confirmed
             self._deaths = data._deaths
             self._recovered = data._recovered
-        else:
+        elif data:
             raise TypeError(f"Can't convert {data.__class__} to Stats")
 
     @property
@@ -91,7 +96,7 @@ class Stats:
         return self._date
 
     @property
-    def infected(self):
+    def infected(self) -> int:
         return self._confirmed - self._deaths - self._recovered
 
     @staticmethod
@@ -108,7 +113,7 @@ class Stats:
 
     def __iadd__(self, other):
         other = Stats(other)
-        if self._date is None:
+        if not self._date:
             self._date = other._date
         elif self._date != other._date:
             raise RuntimeError(f"Dates do not match.")
@@ -118,51 +123,47 @@ class Stats:
         return self
 
 
-def match_cruise_ship(state_field):
-    matcher = re.compile("(.*princess.*|.*cruise ship.*)", re.IGNORECASE)
-    if matcher.match(state_field):
-        return True
-    return False
+def is_cruise_ship(state_field) -> bool:
+    return not re.search("(princess|cruise ship)", state_field, re.IGNORECASE) is None
 
 
-def massage_state(state_field):
+def clean_state_name(state_field: str) -> str:
     state_field = state_field.strip()
-    for state, matcher in STATE_MATCHERS.items():
-        if matcher.match(state_field):
-            return state
 
-    if match_cruise_ship(state_field):
+    if not state_field or is_cruise_ship(state_field):
         return ""
+    elif state_field in STATE_MATCHERS:
+        return state_field
+
+    for state, re_str in STATE_MATCHERS.items():
+        if re.search(re_str, state_field):
+            return state
 
     return state_field
 
 
-def read_data(state):
-    data = {}
+def get_infected_state_data(state: str) -> Dict[str, int]:
+    data = defaultdict(Stats)
+    if not state:
+        _LOGGER.warning("State cannot be an empty string.")
+
     for filename in sorted(DATAPATH.glob("*.csv")):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
             for row in csvreader:
-                state_field = massage_state(row["Province/State"])
-                if state_field and state == state_field.upper():
+                if state.casefold() == clean_state_name(row["Province/State"]).casefold():
                     stats = Stats(row)
-                    date = stats.date
-                    if data.get(date):
-                        data[date] += stats
-                    else:
-                        data[date] = stats
-    for key in data:
-        data[key] = data[key].infected
-    return data
+                    data[stats.date] += stats
+    return {date_: stats_.infected for date_, stats_ in data.items()}
 
 
-def list_states():
+def get_states() -> Sequence[str]:
     states = list()
     for filename in DATAPATH.glob("*.csv"):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
             states = sorted(
-                set(filter(None, (massage_state(row["Province/State"]) for row in csvreader)))
+                set(filter(None, (clean_state_name(row["Province/State"]) for row in csvreader)))
             )
 
     return states
@@ -177,11 +178,10 @@ def main():
         parser.print_usage()
         parser.exit(status=1)
     elif args.list:
-        print("\n".join(list_states()))
+        print("\n".join(get_states()))
         sys.exit()
 
-    state = args.state.upper()
-    data = read_data(state)
+    data = get_infected_state_data(args.state)
     with tempfile.NamedTemporaryFile(mode="w") as datfile:
         for key in sorted(data):
             datfile.write(f"{key}\t{data[key]}\n")
@@ -201,7 +201,7 @@ def _create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "state", nargs="?", choices=list_states(), help="State to graph",
+        "state", nargs="?", choices=get_states(), help="State to graph",
     )
 
     return parser
