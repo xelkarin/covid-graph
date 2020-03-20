@@ -80,7 +80,7 @@ class State:
     def _clean_state_name(self, string: str) -> str:
         string = string.strip()
 
-        if not string or self._is_cruise_ship(string):
+        if not string or string == "US" or self._is_cruise_ship(string):
             return ""
         elif string in self._STATE_MATCHERS:
             return string
