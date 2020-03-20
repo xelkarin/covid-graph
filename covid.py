@@ -60,9 +60,11 @@ STATE_MATCHERS = {
     "South Carolina": r".*, SC$",
     "Tennessee": r".*, TN$",
     "Texas": r"(.*, TX$|.*, TX \(From Diamond Princess\))",
+    "United Kingdom": r"^UK$",
     "Utah": r".*, UT$",
     "Vermont": r".*, VT$",
     "Virginia": r".*, VA$",
+    "Virgin Islands": r"(^United States Virgin Islands$|^Virgin Islands, U.S.$)",
     "Washington": r".*, WA$",
     "Wisconsin": r".*, WI$",
 }
