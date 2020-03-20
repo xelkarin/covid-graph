@@ -101,7 +101,7 @@ class State:
         elif isinstance(other, str):
             return self._name.casefold() == other.casefold()
         else:
-            return false
+            return False
 
     def __hash__(self):
         return hash(self._name.casefold())
