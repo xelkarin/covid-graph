@@ -25,49 +25,100 @@ with suppress(DistributionNotFound, RequirementParseError):
 
 DATAPATH = Path("COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
 
-STATE_MATCHERS = {
-    "Alberta": r".*, Alberta$",
-    "Arizona": r".*, AZ$",
-    "California": r"(.*, CA$|.*, CA \(From Diamond Princess\))",
-    "Colorado": r".*, CO$",
-    "Connecticut": r".*, CT$",
-    "District of Columbia": r"Washington, D.C.$",
-    "Florida": r".*, FL$",
-    "Georgia": r".*, GA$",
-    "Hawaii": r".*, HI$",
-    "Illinois": r".*, IL$",
-    "Indiana": r".*, IN$",
-    "Iowa": r".*, IA$",
-    "Kansas": r".*, KS$",
-    "Kentucky": r".*, KY$",
-    "Louisiana": r".*, LA$",
-    "Maryland": r".*, MD$",
-    "Massachusetts": r".*, MA$",
-    "Minnesota": r".*, MN$",
-    "Missouri": r".*, MO$",
-    "Nebraska": r"(.*, NE$|.*, NE \(From Diamond Princess\))",
-    "Nevada": r".*, NV$",
-    "New Hampshire": r".*, NH$",
-    "New Jersey": r".*, NJ$",
-    "New York": r".*, NY$",
-    "North Carolina": r".*, NC$",
-    "Oklahoma": r".*, OK$",
-    "Ontario": r".*, ON$",
-    "Oregon": r".*, OR$",
-    "Pennsylvania": r".*, PA$",
-    "Quebec": r".*, QC$",
-    "Rhode Island": r".*, RI$",
-    "South Carolina": r".*, SC$",
-    "Tennessee": r".*, TN$",
-    "Texas": r"(.*, TX$|.*, TX \(From Diamond Princess\))",
-    "United Kingdom": r"^UK$",
-    "Utah": r".*, UT$",
-    "Vermont": r".*, VT$",
-    "Virginia": r".*, VA$",
-    "Virgin Islands": r"(^United States Virgin Islands$|^Virgin Islands, U.S.$)",
-    "Washington": r".*, WA$",
-    "Wisconsin": r".*, WI$",
-}
+class State:
+    _STATE_MATCHERS = {
+        "Alberta": r".*, Alberta$",
+        "Arizona": r".*, AZ$",
+        "California": r"(.*, CA$|.*, CA \(From Diamond Princess\))",
+        "Colorado": r".*, CO$",
+        "Connecticut": r".*, CT$",
+        "District of Columbia": r"Washington, D.C.$",
+        "Florida": r".*, FL$",
+        "Georgia": r".*, GA$",
+        "Hawaii": r".*, HI$",
+        "Illinois": r".*, IL$",
+        "Indiana": r".*, IN$",
+        "Iowa": r".*, IA$",
+        "Kansas": r".*, KS$",
+        "Kentucky": r".*, KY$",
+        "Louisiana": r".*, LA$",
+        "Maryland": r".*, MD$",
+        "Massachusetts": r".*, MA$",
+        "Minnesota": r".*, MN$",
+        "Missouri": r".*, MO$",
+        "Nebraska": r"(.*, NE$|.*, NE \(From Diamond Princess\))",
+        "Nevada": r".*, NV$",
+        "New Hampshire": r".*, NH$",
+        "New Jersey": r".*, NJ$",
+        "New York": r".*, NY$",
+        "North Carolina": r".*, NC$",
+        "Oklahoma": r".*, OK$",
+        "Ontario": r".*, ON$",
+        "Oregon": r".*, OR$",
+        "Pennsylvania": r".*, PA$",
+        "Quebec": r".*, QC$",
+        "Rhode Island": r".*, RI$",
+        "South Carolina": r".*, SC$",
+        "Tennessee": r".*, TN$",
+        "Texas": r"(.*, TX$|.*, TX \(From Diamond Princess\))",
+        "United Kingdom": r"^UK$",
+        "Utah": r".*, UT$",
+        "Vermont": r".*, VT$",
+        "Virginia": r".*, VA$",
+        "Virgin Islands": r"(^United States Virgin Islands$|^Virgin Islands, U.S.$)",
+        "Washington": r".*, WA$",
+        "Wisconsin": r".*, WI$",
+    }
+
+    def __init__(self, string: str):
+        self._name = self._clean_state_name(string)
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def _clean_state_name(self, string: str) -> str:
+        string = string.strip()
+
+        if not string or self._is_cruise_ship(string):
+            return ""
+        elif string in self._STATE_MATCHERS:
+            return string
+
+        for state, re_str in self._STATE_MATCHERS.items():
+            if re.search(re_str, string):
+                return state
+
+        return string
+
+    @staticmethod
+    def _is_cruise_ship(string) -> bool:
+        return not re.search("(princess|cruise ship)", string, re.IGNORECASE) is None
+
+    def __eq__(self, other):
+        if isinstance(other, State):
+            return self._name.casefold() == other._name.casefold()
+        elif isinstance(other, str):
+            return self._name.casefold() == other.casefold()
+        else:
+            return false
+
+    def __hash__(self):
+        return hash(self._name.casefold())
+
+    def __lt__(self, other):
+        if isinstance(other, State):
+            return self._name.casefold() < other._name.casefold()
+        elif isinstance(other, str):
+            return self._name.casefold() < other.casefold()
+        else:
+            raise RuntimeError(f"Invalid comparison: {self.__class__} and {other.__class__}")
+
+    def __repr__(self):
+        return self._name
+
+    def __str__(self):
+        return self._name
 
 
 class Stats:
@@ -125,26 +176,7 @@ class Stats:
         return self
 
 
-def is_cruise_ship(state_field) -> bool:
-    return not re.search("(princess|cruise ship)", state_field, re.IGNORECASE) is None
-
-
-def clean_state_name(state_field: str) -> str:
-    state_field = state_field.strip()
-
-    if not state_field or is_cruise_ship(state_field):
-        return ""
-    elif state_field in STATE_MATCHERS:
-        return state_field
-
-    for state, re_str in STATE_MATCHERS.items():
-        if re.search(re_str, state_field):
-            return state
-
-    return state_field
-
-
-def get_infected_state_data(state: str) -> Dict[str, int]:
+def get_infected_state_data(state: State) -> Dict[str, int]:
     data = defaultdict(Stats)
     if not state:
         _LOGGER.warning("State cannot be an empty string.")
@@ -153,19 +185,19 @@ def get_infected_state_data(state: str) -> Dict[str, int]:
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
             for row in csvreader:
-                if state.casefold() == clean_state_name(row["Province/State"]).casefold():
+                if state == State(row["Province/State"]):
                     stats = Stats(row)
                     data[stats.date] += stats
     return {date_: stats_.infected for date_, stats_ in data.items()}
 
 
-def get_states() -> Sequence[str]:
+def get_states() -> Sequence[State]:
     states = list()
     for filename in DATAPATH.glob("*.csv"):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
-            states += list(filter(None,
-                (clean_state_name(row["Province/State"]) for row in csvreader)))
+            states += list(filter(lambda state : state.name,
+                (State(row["Province/State"]) for row in csvreader)))
 
     return sorted(set(states))
 
@@ -179,7 +211,7 @@ def main():
         parser.print_usage()
         parser.exit(status=1)
     elif args.list:
-        print("\n".join(get_states()))
+        print("\n".join(map(str, get_states())))
         sys.exit()
 
     data = get_infected_state_data(args.state)
@@ -202,7 +234,7 @@ def _create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "state", nargs="?", choices=get_states(), help="State to graph",
+        "state", nargs="?", type=State, choices=get_states(), help="State to graph",
     )
 
     return parser
