@@ -162,11 +162,10 @@ def get_states() -> Sequence[str]:
     for filename in DATAPATH.glob("*.csv"):
         with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
             csvreader = csv.DictReader(csvfile)
-            states = sorted(
-                set(filter(None, (clean_state_name(row["Province/State"]) for row in csvreader)))
-            )
+            states += list(filter(None,
+                (clean_state_name(row["Province/State"]) for row in csvreader)))
 
-    return states
+    return sorted(set(states))
 
 
 def main():
