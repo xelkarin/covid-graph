@@ -1,7 +1,7 @@
 set title 'COVID-19 Infection Rate'
 set xlabel 'Date'
 set ylabel 'Confirmed Cases'
-set offsets 1, 1
+set offsets 1, 1, 100
 set nokey
 
 set xdata time
