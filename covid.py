@@ -1,16 +1,11 @@
 #!/usr/bin/python3
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring
 import argparse
-import csv
 import logging
-import re
 import sys
 import tempfile
-from collections import defaultdict
 from contextlib import suppress
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, Sequence
 
 from pkg_resources import DistributionNotFound, RequirementParseError, get_distribution
 

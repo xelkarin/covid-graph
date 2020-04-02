@@ -3,11 +3,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict
 
-Type = Enum("Type", "STATE COUNTRY")
+RegionType = Enum("Type", "STATE COUNTRY")
 
 class Region:
-    def __init__(self, type: Type, name: str, country: str):
-        self._type = type
+    def __init__(self, region_type: RegionType, name: str, country: str):
+        self._type = region_type
         self._name = name
         self._country = country
         self._stats = dict()
@@ -36,7 +36,7 @@ class Region:
 
     def _create_key(self) -> str:
         key = self._name
-        if self._type == Type.STATE:
+        if self._type == RegionType.STATE:
             key += "_" + self._country
 
         key = key.casefold()
@@ -48,9 +48,9 @@ class Region:
     def __lt__(self, other):
         if isinstance(other, Region):
             return self._key < other._key
-        else:
-            msg = f"Invalid comparison: {self.__class__} and {other.__class__}"
-            raise RuntimeError(msg)
+
+        msg = f"Invalid comparison: {self.__class__} and {other.__class__}"
+        raise RuntimeError(msg)
 
     def __iter__(self):
         for date, stats in sorted(self._stats.items()):
@@ -62,7 +62,7 @@ class Region:
         return self._key
 
     def __str__(self):
-        if self._type == Type.STATE:
+        if self._type == RegionType.STATE:
             return f"{self._name}, {self._country}"
-        else:
-            return self._name
+
+        return self._name

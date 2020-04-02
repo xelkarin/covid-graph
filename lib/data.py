@@ -3,12 +3,12 @@ import csv
 import re
 from datetime import datetime
 from pathlib import Path
-from region import Region, Type
+from region import Region, RegionType
 
 RPATH = Path("..", "COVID-19", "csse_covid_19_data", "csse_covid_19_daily_reports")
 DATAPATH = Path(__file__).parent.absolute().joinpath(RPATH)
 
-_IGNORE_COUNTRIES = [ "Others" ]
+_IGNORE_COUNTRIES = ["Others"]
 
 _COUNTRY_MATCHERS = {
     "Antigua": r"^Antigua and Barbuda$",
@@ -105,22 +105,22 @@ _STATE_MATCHERS = {
 
 def read(region: str):
     data = _Data()
-    states = data._data[Type.STATE]
-    regions = data._data[Type.COUNTRY]
-    regions.update(states)
+    _states = data._data[RegionType.STATE]
+    regions = data._data[RegionType.COUNTRY]
+    regions.update(_states)
     return regions[region]
 
 
 def countries():
     data = _Data()
-    countries = data._data[Type.COUNTRY]
-    return sorted(countries.values())
+    _countries = data._data[RegionType.COUNTRY]
+    return sorted(_countries.values())
 
 
 def states():
     data = _Data()
-    states = data._data[Type.STATE]
-    return sorted(states.values())
+    _states = data._data[RegionType.STATE]
+    return sorted(_states.values())
 
 
 def _toint(value):
@@ -149,25 +149,25 @@ class _Headers:
 class _Data:
     def __init__(self):
         self._data = dict()
-        self._data[Type.STATE] = dict()
-        self._data[Type.COUNTRY] = dict()
+        self._data[RegionType.STATE] = dict()
+        self._data[RegionType.COUNTRY] = dict()
 
         for filename in sorted(DATAPATH.glob("*.csv")):
             with filename.open(mode="r", encoding="utf-8-sig") as csvfile:
                 csvreader = csv.DictReader(csvfile)
                 if "Province/State" in csvreader.fieldnames:
                     headers = _Headers(
-                            "Province/State",
-                            "Country/Region",
-                            "Last Update"
+                        "Province/State",
+                        "Country/Region",
+                        "Last Update"
                         )
                     self._parse(csvreader, headers)
 
                 elif "Province_State" in csvreader.fieldnames:
                     headers = _Headers(
-                            "Province_State",
-                            "Country_Region",
-                            "Last_Update"
+                        "Province_State",
+                        "Country_Region",
+                        "Last_Update"
                         )
                     self._parse(csvreader, headers)
 
@@ -181,29 +181,29 @@ class _Data:
             stats = _Data._parse_stats(row)
 
             country_name = self._clean_name(
-                    row[headers.country],
-                    _IGNORE_COUNTRIES,
-                    _COUNTRY_MATCHERS
+                row[headers.country],
+                _IGNORE_COUNTRIES,
+                _COUNTRY_MATCHERS
                 )
             if country_name:
-                country = Region(Type.COUNTRY, country_name, country_name)
-                self._update(Type.COUNTRY, country, date, stats)
+                country = Region(RegionType.COUNTRY, country_name, country_name)
+                self._update(RegionType.COUNTRY, country, date, stats)
 
             state_name = self._clean_name(
-                    row[headers.state],
-                    _IGNORE_STATES,
-                    _STATE_MATCHERS
+                row[headers.state],
+                _IGNORE_STATES,
+                _STATE_MATCHERS
                 )
             if state_name:
-                state = Region(Type.STATE, state_name, country_name)
-                self._update(Type.STATE, state, date, stats)
+                state = Region(RegionType.STATE, state_name, country_name)
+                self._update(RegionType.STATE, state, date, stats)
 
-    def _update(self, type: Type, region, date, stats):
-        dict = self._data[type]
+    def _update(self, region_type: RegionType, region, date, stats):
+        dict_ = self._data[region_type]
         key = region.key
-        region = dict.get(key, region)
+        region = dict_.get(key, region)
         region.update_stats(date, stats)
-        dict[key] = region
+        dict_[key] = region
 
     @staticmethod
     def _parse_stats(row):
@@ -231,7 +231,8 @@ class _Data:
 
         if not name or self._is_cruise_ship(name) or ignore and name in ignore:
             return ""
-        elif name in matchers.items():
+
+        if name in matchers.items():
             return name
 
         for state, re_str in matchers.items():
