@@ -1,4 +1,4 @@
-set title 'COVID-19 Infection Rate'
+set title title
 set xlabel 'Date'
 set ylabel 'Confirmed Cases'
 set offsets 1, 1, 100
