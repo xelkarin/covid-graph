@@ -40,6 +40,10 @@ def main():
         sys.exit()
 
     region = data.read(args.region)
+    if not region:
+        print(f"Region '{args.region}' not found.")
+        sys.exit(1)
+
     title = f"COVID-19 Infections ({region})"
     with tempfile.NamedTemporaryFile(mode="w") as datfile:
         for date, infections in region:

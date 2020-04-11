@@ -108,7 +108,7 @@ def read(region: str):
     _states = data._data[RegionType.STATE]
     regions = data._data[RegionType.COUNTRY]
     regions.update(_states)
-    return regions[region]
+    return _select_region(region, regions)
 
 
 def countries():
@@ -121,6 +121,26 @@ def states():
     data = _Data()
     _states = data._data[RegionType.STATE]
     return sorted(_states.values())
+
+
+def _select_region(region:str, regions: dict):
+    matches = list()
+    region = Region.normalize_key(region)
+    for key in regions:
+        if re.search(region, key):
+            matches.append(regions[key])
+
+    if not matches:
+        return None
+
+    selection = 0
+    if len(matches) > 1:
+        print("Please select one of the following matching regions: ")
+        for idx, match in enumerate(matches):
+            print(f"  {idx + 1}. {matches[idx]}")
+        selection = int(input(">>> ")) - 1
+
+    return matches[selection]
 
 
 def _toint(value):

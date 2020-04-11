@@ -34,15 +34,18 @@ class Region:
         else:
             self._stats[date] = stats
 
+    @staticmethod
+    def normalize_key(key: str) -> str:
+        key = key.casefold()
+        key = re.sub("[ -]", "_", key)
+        key = re.sub("['(),.]", "", key)
+        return key
+
     def _create_key(self) -> str:
         key = self._name
         if self._type == RegionType.STATE:
             key += "_" + self._country
-
-        key = key.casefold()
-        key = re.sub("[ -]", "_", key)
-        key = re.sub("['(),.]", "", key)
-
+        key = self.normalize_key(key)
         return key
 
     def __lt__(self, other):
