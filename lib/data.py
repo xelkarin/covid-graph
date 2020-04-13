@@ -235,15 +235,15 @@ class _Data:
 
     @staticmethod
     def _clean_date(date_field):
-        if "/" in date_field:
-            rawdate = date_field[:-6]
-            month, day, year = tuple(int(x) for x in rawdate.split("/"))
+        match = re.search("^\d+/\d+/\d+", date_field)
+        if match:
+            month, day, year = tuple(int(x) for x in match[0].split("/"))
             if year < 100:
                 year += 2000
             date = datetime.strptime(f"{month:02d}/{day:02d}/{year:04d}", "%m/%d/%Y")
         else:
-            rawdate = date_field[:-9]
-            date = datetime.strptime(rawdate, "%Y-%m-%d")
+            match = re.search("^\d+-\d+-\d+", date_field)
+            date = datetime.strptime(match[0], "%Y-%m-%d")
         return date
 
     def _clean_name(self, name, ignore, matchers):
