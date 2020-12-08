@@ -144,7 +144,7 @@ def _select_region(region:str, regions: dict):
 
 
 def _toint(value):
-    return int(value) if value else 0
+    return int(re.sub(r'\.[0-9]+', '', value)) if value else 0
 
 
 class _Headers:

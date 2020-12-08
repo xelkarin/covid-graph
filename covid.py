@@ -20,9 +20,6 @@ from gnuplot import Gnuplot
 _LOGGER = logging.getLogger(__name__)
 __version__ = "0.0.0"
 
-with suppress(DistributionNotFound, RequirementParseError):
-    __version__ = get_distribution(__name__).version
-
 
 def main():
     """ Main interface """
@@ -46,8 +43,9 @@ def main():
 
     title = f"COVID-19 Infections ({region})"
     with tempfile.NamedTemporaryFile(mode="w") as datfile:
-        for date, infections in region:
-            datfile.write(f"{date}\t{infections}\n")
+        for stats in region.daily_stats():
+            datfile.write(f"{stats.date}\t{stats.cases}\t{stats.avg}\n")
+
         datfile.flush()
         gnuplot = Gnuplot("./covid.gp", args.terminal, args.output)
         gnuplot.set_var("datfile", datfile.name)
